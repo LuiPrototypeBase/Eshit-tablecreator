@@ -1,2 +1,2 @@
-// 本地开发时留空；部署到 GitHub Pages 后，改成你的 Cloudflare Worker 地址。
-window.AKAISHI_API_BASE = "https://eshit-api.reila-kashima.workers.dev";
+// 本地开发时可留空；线上使用自定义域名后的 Cloudflare Worker。
+window.AKAISHI_API_BASE = "https://api.luiprototypebase.com";

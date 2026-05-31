@@ -249,11 +249,17 @@ async function exportImage() {
   if (document.fonts?.ready) {
     await document.fonts.ready;
   }
+  const previousTransform = capture.style.transform;
+  const previousMargin = capture.style.marginBottom;
+  capture.style.transform = "none";
+  capture.style.marginBottom = "0";
   const canvas = await html2canvas(capture, {
     backgroundColor: "#202020",
     scale: 2,
     useCORS: true
   });
+  capture.style.transform = previousTransform;
+  capture.style.marginBottom = previousMargin;
   const link = document.createElement("a");
   link.download = state.mode === "annual" ? `${state.year}年度赤石表格.png` : "赤石表格-爱藏版.png";
   link.href = canvas.toDataURL("image/png");

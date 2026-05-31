@@ -492,6 +492,10 @@ h1 span {
 }
 
 @media (max-width: 980px) {
+  .app-shell {
+    padding: 10px;
+  }
+
   .controls,
   .workspace,
   .titlebar {
@@ -500,6 +504,30 @@ h1 span {
 
   .titlebar {
     display: grid;
+    padding: 14px;
+  }
+
+  h1 {
+    font-size: 38px;
+    line-height: 1.05;
+  }
+
+  .pro-subtitle {
+    font-size: 13px;
+  }
+
+  .actions,
+  .main-mode-switch {
+    width: 100%;
+  }
+
+  .actions button,
+  .mode-switch button {
+    flex: 1 1 auto;
+  }
+
+  .main-mode-switch button {
+    min-width: 0;
   }
 
   .panel {
@@ -509,9 +537,49 @@ h1 span {
 
   .preview-wrap {
     padding: 10px;
+    overflow: visible;
   }
 
   .slot-editor {
     grid-template-columns: 1fr;
+  }
+
+  .poster {
+    transform: scale(calc((100vw - 40px) / 1040));
+    transform-origin: top left;
+    margin-bottom: calc((940px * ((100vw - 40px) / 1040)) - 940px);
+  }
+
+  .site-footer {
+    flex-wrap: wrap;
+    line-height: 1.6;
+  }
+}
+
+@media (max-width: 520px) {
+  .search-box {
+    grid-template-columns: 1fr;
+  }
+
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .mode-switch {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .actions .primary {
+    grid-column: 1 / -1;
+  }
+
+  .fixed-field {
+    min-height: auto;
   }
 }
