@@ -45,7 +45,7 @@
       <div class="workspace">
         <aside class="panel">
           <div class="search-box">
-            <label>
+            <label class="search-keyword">
               搜索 Bangumi
               <input id="searchInput" placeholder="输入动画、漫画、游戏、书籍名">
             </label>
@@ -63,6 +63,11 @@
               包含 R18
             </label>
             <button id="searchBtn" class="primary" type="button">搜索</button>
+            <label class="direct-add">
+              Bangumi 链接 / ID
+              <input id="subjectIdInput" placeholder="https://bgm.tv/subject/123456 或 123456">
+            </label>
+            <button id="addByIdBtn" type="button">直接添加</button>
           </div>
           <div class="slot-editor">
             <label>

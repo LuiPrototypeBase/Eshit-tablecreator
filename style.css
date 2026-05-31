@@ -235,6 +235,10 @@ h1 span {
   gap: 10px;
 }
 
+.direct-add {
+  grid-column: 1 / 4;
+}
+
 .check-field {
   min-height: 38px;
   display: flex;
@@ -582,6 +586,10 @@ h1 span {
 @media (max-width: 520px) {
   .search-box {
     grid-template-columns: 1fr;
+  }
+
+  .direct-add {
+    grid-column: auto;
   }
 
   .controls {
