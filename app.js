@@ -52,6 +52,10 @@ const typeNames = {
   6: "三次元"
 };
 
+function proxiedImageUrl(url) {
+  return url ? `${API_BASE}/api/image?url=${encodeURIComponent(url)}` : "";
+}
+
 function createSlots(source) {
   return source.map(([label, prompt, featured]) => ({ label, prompt, featured: Boolean(featured), subject: null }));
 }
@@ -219,7 +223,7 @@ function renderResults(items) {
 
     const img = document.createElement("img");
     img.crossOrigin = "anonymous";
-    img.src = item.images?.small || item.images?.common || "";
+    img.src = proxiedImageUrl(item.images?.small || item.images?.common || "");
     img.alt = item.name_cn || item.name || "Bangumi subject";
 
     const body = document.createElement("div");
@@ -236,7 +240,7 @@ function renderResults(items) {
       currentSlots()[state.active].subject = {
         id: item.id,
         name: item.name_cn || item.name,
-        image: `${API_BASE}/api/image?url=${encodeURIComponent(item.images?.large || item.images?.common || item.images?.small || "")}`
+        image: proxiedImageUrl(item.images?.large || item.images?.common || item.images?.small || "")
       };
       renderGrid();
     });
