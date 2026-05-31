@@ -1,4 +1,5 @@
 const APP_UA = "AkaishiTableGenerator/1.0 (https://github.com/your-name/akaishi-generator)";
+const SEARCH_CACHE_VERSION = "v4";
 const SEARCH_TTL_SECONDS = 60 * 60 * 24;
 const IMAGE_TTL_SECONDS = 60 * 60 * 24 * 7;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -51,10 +52,18 @@ async function searchBangumi(request, env, ctx) {
   const offset = clampNumber(payload.offset, 0, 0, 1000);
 
   const cache = caches.default;
-  const cacheKey = new Request(`https://akaishi.cache/search/${encodeURIComponent(keyword.toLowerCase())}/${type}/${includeNsfw ? "nsfw" : "sfw"}/${limit}/${offset}`);
+  const cacheKey = new Request(`https://akaishi.cache/${SEARCH_CACHE_VERSION}/search/${encodeURIComponent(keyword.toLowerCase())}/${type}/${includeNsfw ? "nsfw" : "sfw"}/${limit}/${offset}`);
   const cached = await cache.match(cacheKey);
   if (cached) return withCors(cached);
 
+  if (includeNsfw) {
+    return searchNsfwSubjects({ keyword, type, limit, offset, env, ctx, cacheKey });
+  }
+
+  return searchV0Subjects({ keyword, type, includeNsfw, limit, offset, env, ctx, cacheKey });
+}
+
+async function searchV0Subjects({ keyword, type, includeNsfw, limit, offset, env, ctx, cacheKey }) {
   const headers = {
     "Accept": "application/json",
     "Content-Type": "application/json",
@@ -71,7 +80,7 @@ async function searchBangumi(request, env, ctx) {
       keyword,
       filter: {
         type: [type],
-        nsfw: includeNsfw ? "include" : false
+        nsfw: includeNsfw
       },
       sort: "match"
     })
@@ -82,12 +91,134 @@ async function searchBangumi(request, env, ctx) {
     status: upstream.status,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      "Cache-Control": `public, max-age=${SEARCH_TTL_SECONDS}`
+      "Cache-Control": `public, max-age=${SEARCH_TTL_SECONDS}`,
+      "X-Search-Source": "v0"
     }
   }));
 
   if (upstream.ok) ctx.waitUntil(cache.put(cacheKey, response.clone()));
   return response;
+}
+
+async function searchNsfwSubjects({ keyword, type, limit, offset, env, ctx, cacheKey }) {
+  const [v0Result, legacyResult] = await Promise.all([
+    fetchV0Payload({ keyword, type, includeNsfw: true, limit, offset, env }),
+    fetchLegacyPayload({ keyword, type, limit, offset, env })
+  ]);
+
+  const merged = mergeSearchPayloads(v0Result.payload, legacyResult.payload);
+  const response = withCors(new Response(JSON.stringify(merged), {
+    status: v0Result.ok || legacyResult.ok ? 200 : 502,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": `public, max-age=${SEARCH_TTL_SECONDS}`,
+      "X-Search-Source": "v0+legacy"
+    }
+  }));
+
+  if (v0Result.ok || legacyResult.ok) ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
+  return response;
+}
+
+async function fetchV0Payload({ keyword, type, includeNsfw, limit, offset, env }) {
+  const headers = {
+    "Accept": "application/json",
+    "Content-Type": "application/json",
+    "User-Agent": env.BANGUMI_USER_AGENT || APP_UA
+  };
+  if (env.BANGUMI_TOKEN) {
+    headers.Authorization = `Bearer ${env.BANGUMI_TOKEN}`;
+  }
+
+  const upstream = await fetch(`https://api.bgm.tv/v0/search/subjects?limit=${limit}&offset=${offset}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      keyword,
+      filter: {
+        type: [type],
+        nsfw: includeNsfw
+      },
+      sort: "match"
+    })
+  });
+  const payload = await upstream.json().catch(() => ({ data: [], total: 0, limit, offset }));
+  return { ok: upstream.ok, payload };
+}
+
+async function searchLegacySubjects({ keyword, type, limit, offset, env, ctx, cacheKey }) {
+  const result = await fetchLegacyPayload({ keyword, type, limit, offset, env });
+  const response = withCors(new Response(JSON.stringify(result.payload), {
+    status: result.status,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": `public, max-age=${SEARCH_TTL_SECONDS}`,
+      "X-Search-Source": "legacy"
+    }
+  }));
+
+  if (result.ok) ctx.waitUntil(cache.put(cacheKey, response.clone()));
+  return response;
+}
+
+async function fetchLegacyPayload({ keyword, type, limit, offset, env }) {
+  const maxResults = Math.min(limit, 25);
+  const url = new URL(`https://api.bgm.tv/search/subject/${encodeURIComponent(keyword)}`);
+  url.searchParams.set("type", String(type));
+  url.searchParams.set("responseGroup", "large");
+  url.searchParams.set("max_results", String(maxResults));
+  url.searchParams.set("start", String(offset));
+  if (env.BANGUMI_TOKEN) {
+    url.searchParams.set("access_token", env.BANGUMI_TOKEN);
+  }
+
+  const headers = {
+    "Accept": "application/json",
+    "User-Agent": env.BANGUMI_USER_AGENT || APP_UA
+  };
+  if (env.BANGUMI_TOKEN) {
+    headers.Authorization = `Bearer ${env.BANGUMI_TOKEN}`;
+  }
+
+  const upstream = await fetch(url.toString(), { headers });
+  const legacy = await upstream.json().catch(() => null);
+  const payload = legacy
+    ? {
+        data: legacy.list || [],
+        total: legacy.results || legacy.list?.length || 0,
+        limit: maxResults,
+        offset
+      }
+    : { data: [], total: 0, limit: maxResults, offset };
+
+  return { ok: upstream.ok, status: upstream.status, payload };
+}
+
+function mergeSearchPayloads(...payloads) {
+  const seen = new Set();
+  const data = [];
+  let total = 0;
+  let limit = 20;
+  let offset = 0;
+
+  for (const payload of payloads) {
+    if (!payload) continue;
+    total = Math.max(total, payload.total || payload.results || 0);
+    limit = payload.limit || limit;
+    offset = payload.offset || offset;
+    for (const item of payload.data || payload.list || []) {
+      if (!item?.id || seen.has(item.id)) continue;
+      seen.add(item.id);
+      data.push(item);
+    }
+  }
+
+  return {
+    data,
+    total: Math.max(total, data.length),
+    limit,
+    offset
+  };
 }
 
 async function getSubject(url, env, ctx) {
