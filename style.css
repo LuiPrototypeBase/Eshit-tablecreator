@@ -282,6 +282,13 @@ h1 span {
   font-size: 12px;
 }
 
+.load-more {
+  width: 100%;
+  min-height: 42px;
+  border-style: dashed;
+  color: #d8d8d8;
+}
+
 .preview-wrap {
   overflow: auto;
   padding: 16px;

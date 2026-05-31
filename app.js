@@ -29,6 +29,13 @@ const state = {
   active: 0,
   dragging: null,
   year: new Date().getFullYear(),
+  search: {
+    keyword: "",
+    offset: 0,
+    limit: 20,
+    total: 0,
+    loading: false
+  },
   templates: {
     collection: createSlots(COLLECTION_SLOTS),
     annual: createSlots(ANNUAL_SLOTS)
@@ -190,28 +197,49 @@ function renderPosterText() {
   document.querySelector("#noteText").textContent = "本表格仅供娱乐与主观填写，无任何引战，上纲上线意味";
 }
 
-async function searchBangumi() {
+async function searchBangumi({ append = false } = {}) {
   const keyword = searchInput.value.trim();
   if (!keyword) return;
+  if (state.search.loading) return;
 
-  results.innerHTML = `<div class="hint">搜索中...</div>`;
+  if (!append || keyword !== state.search.keyword) {
+    state.search.keyword = keyword;
+    state.search.offset = 0;
+    state.search.total = 0;
+    results.innerHTML = `<div class="hint">搜索中...</div>`;
+  }
+
+  state.search.loading = true;
   try {
     const response = await fetch(`${API_BASE}/api/search`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ keyword })
+      body: JSON.stringify({
+        keyword,
+        limit: state.search.limit,
+        offset: state.search.offset
+      })
     });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || "搜索失败");
-    renderResults(payload.data || []);
+    state.search.total = payload.total || 0;
+    renderResults(payload.data || [], { append });
+    state.search.offset += payload.data?.length || 0;
   } catch (error) {
-    results.innerHTML = `<div class="hint">${error.message}</div>`;
+    if (!append) results.innerHTML = "";
+    const message = document.createElement("div");
+    message.className = "hint";
+    message.textContent = error.message;
+    results.append(message);
+  } finally {
+    state.search.loading = false;
   }
 }
 
-function renderResults(items) {
-  results.innerHTML = "";
-  if (!items.length) {
+function renderResults(items, { append = false } = {}) {
+  if (!append) results.innerHTML = "";
+  results.querySelector(".load-more")?.remove();
+  if (!items.length && !append) {
     results.innerHTML = `<div class="hint">没有找到结果，换个关键词试试。</div>`;
     return;
   }
@@ -246,6 +274,16 @@ function renderResults(items) {
     });
     results.append(button);
   });
+
+  const shown = state.search.offset + items.length;
+  if (shown < state.search.total) {
+    const more = document.createElement("button");
+    more.className = "load-more";
+    more.type = "button";
+    more.textContent = `加载更多（已显示 ${shown} / ${state.search.total}）`;
+    more.addEventListener("click", () => searchBangumi({ append: true }));
+    results.append(more);
+  }
 }
 
 async function exportImage() {

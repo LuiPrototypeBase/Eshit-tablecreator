@@ -37,9 +37,11 @@ async function searchBangumi(request, env, ctx) {
 
   const keyword = String(payload.keyword || "").trim();
   if (!keyword) return json({ error: "Keyword is required" }, 400);
+  const limit = clampNumber(payload.limit, 20, 1, 50);
+  const offset = clampNumber(payload.offset, 0, 0, 1000);
 
   const cache = caches.default;
-  const cacheKey = new Request(`https://akaishi.cache/search/${encodeURIComponent(keyword.toLowerCase())}`);
+  const cacheKey = new Request(`https://akaishi.cache/search/${encodeURIComponent(keyword.toLowerCase())}/${limit}/${offset}`);
   const cached = await cache.match(cacheKey);
   if (cached) return withCors(cached);
 
@@ -52,7 +54,7 @@ async function searchBangumi(request, env, ctx) {
     headers.Authorization = `Bearer ${env.BANGUMI_TOKEN}`;
   }
 
-  const upstream = await fetch("https://api.bgm.tv/v0/search/subjects?limit=12&offset=0", {
+  const upstream = await fetch(`https://api.bgm.tv/v0/search/subjects?limit=${limit}&offset=${offset}`, {
     method: "POST",
     headers,
     body: JSON.stringify({
@@ -123,4 +125,10 @@ function withCors(response) {
   result.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   result.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
   return result;
+}
+
+function clampNumber(value, fallback, min, max) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.min(max, Math.max(min, Math.floor(number)));
 }
