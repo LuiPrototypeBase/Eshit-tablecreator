@@ -230,13 +230,18 @@ h1 span {
 
 .search-box {
   display: grid;
-  grid-template-columns: 1fr 110px auto auto;
+  grid-template-columns: 1fr 110px auto;
   align-items: end;
   gap: 10px;
 }
 
+.search-box .primary,
+.search-box #addByIdBtn {
+  grid-column: 1 / -1;
+}
+
 .direct-add {
-  grid-column: 1 / 4;
+  grid-column: 1 / -1;
 }
 
 .check-field {
