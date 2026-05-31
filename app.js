@@ -31,6 +31,8 @@ const state = {
   year: new Date().getFullYear(),
   search: {
     keyword: "",
+    type: "2",
+    nsfw: false,
     offset: 0,
     limit: 20,
     total: 0,
@@ -46,6 +48,8 @@ const grid = document.querySelector("#grid");
 const results = document.querySelector("#results");
 const slotHint = document.querySelector("#slotHint");
 const searchInput = document.querySelector("#searchInput");
+const subjectType = document.querySelector("#subjectType");
+const includeNsfw = document.querySelector("#includeNsfw");
 const activeLabel = document.querySelector("#activeLabel");
 const activePrompt = document.querySelector("#activePrompt");
 const capture = document.querySelector("#capture");
@@ -199,11 +203,15 @@ function renderPosterText() {
 
 async function searchBangumi({ append = false } = {}) {
   const keyword = searchInput.value.trim();
+  const type = subjectType.value;
+  const nsfw = includeNsfw.checked;
   if (!keyword) return;
   if (state.search.loading) return;
 
-  if (!append || keyword !== state.search.keyword) {
+  if (!append || keyword !== state.search.keyword || type !== state.search.type || nsfw !== state.search.nsfw) {
     state.search.keyword = keyword;
+    state.search.type = type;
+    state.search.nsfw = nsfw;
     state.search.offset = 0;
     state.search.total = 0;
     results.innerHTML = `<div class="hint">搜索中...</div>`;
@@ -216,6 +224,8 @@ async function searchBangumi({ append = false } = {}) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         keyword,
+        type: Number(type),
+        nsfw,
         limit: state.search.limit,
         offset: state.search.offset
       })

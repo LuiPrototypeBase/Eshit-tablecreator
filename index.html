@@ -49,6 +49,19 @@
               搜索 Bangumi
               <input id="searchInput" placeholder="输入动画、漫画、游戏、书籍名">
             </label>
+            <label>
+              类型
+              <select id="subjectType">
+                <option value="2" selected>动画</option>
+                <option value="1">书籍</option>
+                <option value="4">游戏</option>
+                <option value="6">三次元</option>
+              </select>
+            </label>
+            <label class="check-field">
+              <input id="includeNsfw" type="checkbox">
+              包含 R18
+            </label>
             <button id="searchBtn" class="primary" type="button">搜索</button>
           </div>
           <div class="slot-editor">

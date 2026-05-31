@@ -230,9 +230,25 @@ h1 span {
 
 .search-box {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr 110px auto auto;
   align-items: end;
   gap: 10px;
+}
+
+.check-field {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #d6d6d6;
+  white-space: nowrap;
+}
+
+.check-field input {
+  width: 18px;
+  min-height: 18px;
+  padding: 0;
+  accent-color: var(--red);
 }
 
 .slot-editor {
