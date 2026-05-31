@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>赤石表格生成器</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="editor">
+      <div class="titlebar">
+        <div>
+          <p class="eyebrow">搜索来源:Bangumi</p>
+          <h1>赤石表格生成器<span>ProMax</span></h1>
+          <p class="pro-subtitle">是REMAKE、威力加强版、FHD、猛将传、皇家版、REMASTERED</p>
+          <div class="mode-switch main-mode-switch" aria-label="表格版本">
+            <button id="collectionModeBtn" class="active" data-mode="collection" type="button">爱藏版</button>
+            <button id="annualModeBtn" data-mode="annual" type="button">年度版</button>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="exportBtn" class="primary" type="button">导出图片</button>
+          <button id="addSlotBtn" type="button">添加格子</button>
+          <button id="removeSlotBtn" type="button">删除末格</button>
+          <button id="clearBtn" type="button">清空作品</button>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="fixed-field">
+          <span>当前版本</span>
+          <strong id="modeLabel">爱藏版</strong>
+        </div>
+        <label id="yearControl" class="year-control hidden-control">
+          年份
+          <select id="yearSelect"></select>
+        </label>
+        <label>
+          填表人
+          <input id="playerName" placeholder="输入名字" maxlength="18">
+        </label>
+      </div>
+
+      <div class="workspace">
+        <aside class="panel">
+          <div class="search-box">
+            <label>
+              搜索 Bangumi
+              <input id="searchInput" placeholder="输入动画、漫画、游戏、书籍名">
+            </label>
+            <button id="searchBtn" class="primary" type="button">搜索</button>
+          </div>
+          <div class="slot-editor">
+            <label>
+              当前格标题
+              <input id="activeLabel" maxlength="10">
+            </label>
+            <label>
+              当前格小字
+              <input id="activePrompt" maxlength="18">
+            </label>
+          </div>
+          <div id="slotHint" class="hint">先点击右侧任意格子，再搜索作品填入。</div>
+          <div id="results" class="results"></div>
+        </aside>
+
+        <section class="preview-wrap">
+          <div id="capture" class="poster collection-poster">
+            <header class="poster-head">
+              <div>
+                <div id="yearMark" class="year-mark"></div>
+                <div class="poster-title"><span id="mainTitle">赤石表格</span><strong id="titleText">之我读了这样的石</strong></div>
+                <div id="noteText" class="poster-note">本表格仅供娱乐与主观填写，无任何引战，上纲上线意味</div>
+              </div>
+              <div class="credits">
+                <div>制表人：<span id="makerText">Lui</span></div>
+                <div>填表人：<span id="playerText">_____</span></div>
+              </div>
+            </header>
+            <div id="grid" class="grid"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+    <footer class="site-footer">
+      <a href="https://weibo.com/u/5012538529" target="_blank" rel="noreferrer">联系作者</a>
+      <span>/</span>
+      <a href="https://bangumi.tv/" target="_blank" rel="noreferrer">特别感谢 Bangumi</a>
+      <span>/</span>
+      <span>希望你天天开心(*σ´∀`)σ</span>
+    </footer>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
