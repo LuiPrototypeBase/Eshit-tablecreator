@@ -54,6 +54,7 @@ const activeLabel = document.querySelector("#activeLabel");
 const activePrompt = document.querySelector("#activePrompt");
 const capture = document.querySelector("#capture");
 const yearSelect = document.querySelector("#yearSelect");
+const previewWrap = document.querySelector(".preview-wrap");
 
 const typeNames = {
   1: "书籍",
@@ -153,6 +154,22 @@ function renderGrid() {
     });
     grid.append(button);
   });
+  fitPosterPreview();
+}
+
+function fitPosterPreview() {
+  if (!previewWrap) return;
+  if (!window.matchMedia("(max-width: 980px)").matches) {
+    previewWrap.style.removeProperty("--poster-preview-scale");
+    previewWrap.style.removeProperty("--poster-preview-height");
+    previewWrap.style.removeProperty("height");
+    return;
+  }
+
+  const availableWidth = previewWrap.clientWidth - 20;
+  const scale = Math.min(1, availableWidth / capture.offsetWidth);
+  previewWrap.style.setProperty("--poster-preview-scale", scale);
+  previewWrap.style.setProperty("--poster-preview-height", `${capture.offsetHeight * scale}px`);
 }
 
 function moveSlot(from, to) {
@@ -368,6 +385,7 @@ activePrompt.addEventListener("input", () => {
   syncActiveEditor();
 });
 document.querySelector("#exportBtn").addEventListener("click", exportImage);
+window.addEventListener("resize", fitPosterPreview);
 
 setupYears();
 renderPosterText();
