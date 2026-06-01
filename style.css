@@ -317,6 +317,7 @@ h1 span {
 .preview-wrap {
   overflow: auto;
   padding: 16px;
+  min-width: 0;
 }
 
 .poster {
@@ -569,7 +570,8 @@ h1 span {
 
   .preview-wrap {
     padding: 10px;
-    overflow: visible;
+    overflow: hidden;
+    height: calc(var(--poster-preview-height, 940px) + 20px);
   }
 
   .slot-editor {
@@ -577,9 +579,9 @@ h1 span {
   }
 
   .poster {
-    transform: scale(calc((100vw - 40px) / 1040));
+    transform: scale(var(--poster-preview-scale, 1));
     transform-origin: top left;
-    margin-bottom: calc((940px * ((100vw - 40px) / 1040)) - 940px);
+    margin-bottom: 0;
   }
 
   .site-footer {
@@ -608,7 +610,7 @@ h1 span {
 
   .actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .actions .primary {
